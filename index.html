@@ -3,79 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gas App 2.5</title>
+    <title>Baby Name Creator</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="container">
-      <header class="hero">
-        <h1>Gas App 2.5</h1>
-        <p>GasBuddy-style quick posts: gas price + map location, timestamped now.</p>
-      </header>
-
       <section class="card">
-        <h2>Report Gas Price</h2>
-        <form id="report-form" class="grid">
-          <label>
-            Station Name
-            <input type="text" id="station" maxlength="80" placeholder="e.g., Shell - Main St" />
-          </label>
-          <label>
-            Price Per Gallon ($)
-            <input type="number" id="price" min="0" step="0.001" required />
-          </label>
-          <label>
-            Latitude
-            <input type="number" id="lat" min="-90" max="90" step="0.000001" required />
-          </label>
-          <label>
-            Longitude
-            <input type="number" id="lng" min="-180" max="180" step="0.000001" required />
-          </label>
-          <div class="actions">
-            <button type="button" id="use-location">Use My Location</button>
-            <button type="submit">Post Price</button>
-          </div>
-        </form>
-      </section>
+        <h1>Baby Name Creator</h1>
+        <p>Pick girl or boy, then press Creator Render to get a random baby name idea.</p>
 
-      <section class="stats" id="stats"></section>
+        <div class="selector" role="group" aria-label="Pick baby name type">
+          <button id="boy-btn" type="button" class="pick-btn boy">Boy</button>
+          <button id="girl-btn" type="button" class="pick-btn girl">Girl</button>
+        </div>
 
-      <section class="card map-card">
-        <div class="toolbar">
-          <h2>Map</h2>
-          <small id="map-label">Showing latest report location</small>
-        </div>
-        <iframe
-          id="map"
-          title="Gas station map"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.openstreetmap.org/export/embed.html?bbox=-74.0100%2C40.7000%2C-73.9800%2C40.7300&layer=mapnik&marker=40.7150%2C-73.9950"
-        ></iframe>
-      </section>
+        <button id="render-btn" type="button" class="render-btn">Creator Render</button>
 
-      <section class="card">
-        <div class="toolbar">
-          <h2>Recent Reports</h2>
-          <button id="export">Export CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Posted At</th>
-                <th>Station</th>
-                <th>Price</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Map</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="rows"></tbody>
-          </table>
-        </div>
+        <section class="result-wrap" aria-live="polite">
+          <h2>Result</h2>
+          <p id="result">Choose a button above to start.</p>
+        </section>
       </section>
     </main>
 
