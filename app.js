@@ -1,158 +1,170 @@
-const STORAGE_KEY = "gas-app-2.5-reports";
+const nationalBoyNames = [
+  "Liam",
+  "Noah",
+  "Oliver",
+  "Elijah",
+  "James",
+  "William",
+  "Benjamin",
+  "Lucas",
+  "Henry",
+  "Theodore",
+  "Jack",
+  "Levi",
+  "Alexander",
+  "Jackson",
+  "Mateo",
+  "Daniel",
+  "Michael",
+  "Mason",
+  "Sebastian",
+  "Ethan",
+];
 
-const form = document.getElementById("report-form");
-const rowsEl = document.getElementById("rows");
-const statsEl = document.getElementById("stats");
-const exportBtn = document.getElementById("export");
-const useLocationBtn = document.getElementById("use-location");
-const mapEl = document.getElementById("map");
-const mapLabelEl = document.getElementById("map-label");
+const nationalGirlNames = [
+  "Olivia",
+  "Emma",
+  "Charlotte",
+  "Amelia",
+  "Sophia",
+  "Mia",
+  "Isabella",
+  "Ava",
+  "Evelyn",
+  "Luna",
+  "Harper",
+  "Camila",
+  "Sofia",
+  "Scarlett",
+  "Elizabeth",
+  "Eleanor",
+  "Emily",
+  "Chloe",
+  "Mila",
+  "Violet",
+];
 
-let reports = loadReports();
+const stateNameData = {
+  california: {
+    boy: ["Mateo", "Sebastian", "Santiago", "Elijah", "Julian", "Noah", "Ezra", "Leo"],
+    girl: ["Camila", "Sofia", "Mia", "Luna", "Valentina", "Isabella", "Aria", "Nova"],
+  },
+  texas: {
+    boy: ["Liam", "Noah", "Santiago", "Mateo", "Elijah", "Luca", "Hudson", "Maverick"],
+    girl: ["Emma", "Olivia", "Camila", "Sofia", "Amelia", "Isla", "Avery", "Eliana"],
+  },
+  florida: {
+    boy: ["Noah", "Liam", "Lucas", "Levi", "Ethan", "Logan", "Elijah", "Asher"],
+    girl: ["Olivia", "Sophia", "Mia", "Isabella", "Emma", "Ava", "Gianna", "Luna"],
+  },
+  newyork: {
+    boy: ["Liam", "Noah", "Ethan", "David", "Joseph", "Jacob", "Ezra", "Isaac"],
+    girl: ["Emma", "Olivia", "Leah", "Chloe", "Sarah", "Sophia", "Ava", "Mila"],
+  },
+  illinois: {
+    boy: ["Noah", "Liam", "Henry", "Jack", "Theodore", "Benjamin", "Owen", "Leo"],
+    girl: ["Olivia", "Charlotte", "Amelia", "Evelyn", "Harper", "Nora", "Mila", "Violet"],
+  },
+  georgia: {
+    boy: ["William", "Noah", "James", "Jackson", "Levi", "Hudson", "Asher", "Mason"],
+    girl: ["Charlotte", "Amelia", "Harper", "Evelyn", "Ella", "Avery", "Grace", "Hazel"],
+  },
+  ohio: {
+    boy: ["Liam", "Noah", "Oliver", "Henry", "Jack", "Levi", "Wyatt", "Elias"],
+    girl: ["Olivia", "Emma", "Charlotte", "Amelia", "Ava", "Mia", "Lily", "Aria"],
+  },
+  pennsylvania: {
+    boy: ["Noah", "Liam", "Lucas", "Benjamin", "Elijah", "Logan", "Julian", "Daniel"],
+    girl: ["Charlotte", "Olivia", "Emma", "Sophia", "Mila", "Isla", "Avery", "Lucy"],
+  },
+  northcarolina: {
+    boy: ["Liam", "Noah", "James", "Mason", "Ethan", "Carter", "Levi", "Josiah"],
+    girl: ["Olivia", "Amelia", "Emma", "Ava", "Charlotte", "Harper", "Ellie", "Ivy"],
+  },
+  michigan: {
+    boy: ["Oliver", "Liam", "Noah", "Henry", "Theo", "Levi", "Ethan", "Isaac"],
+    girl: ["Charlotte", "Olivia", "Amelia", "Isla", "Eleanor", "Mia", "Violet", "Nora"],
+  },
+};
 
-function loadReports() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    return [];
+const stateAliases = {
+  california: "california",
+  ca: "california",
+  texas: "texas",
+  tx: "texas",
+  florida: "florida",
+  fl: "florida",
+  ny: "newyork",
+  "new york": "newyork",
+  illinois: "illinois",
+  il: "illinois",
+  georgia: "georgia",
+  ga: "georgia",
+  ohio: "ohio",
+  oh: "ohio",
+  pennsylvania: "pennsylvania",
+  pa: "pennsylvania",
+  "north carolina": "northcarolina",
+  nc: "northcarolina",
+  michigan: "michigan",
+  mi: "michigan",
+};
+
+const boyBtn = document.getElementById("boy-btn");
+const girlBtn = document.getElementById("girl-btn");
+const renderBtn = document.getElementById("render-btn");
+const resultEl = document.getElementById("result");
+const stateInput = document.getElementById("state");
+
+let selectedType = "";
+
+function getRandomName(names) {
+  return names[Math.floor(Math.random() * names.length)];
+}
+
+function normalizeState(value) {
+  const cleaned = value.trim().toLowerCase().replace(/[^a-z\s]/g, "").replace(/\s+/g, " ");
+  return stateAliases[cleaned] || cleaned.replace(/\s/g, "");
+}
+
+function getNamePool(type, stateInputValue) {
+  const stateKey = normalizeState(stateInputValue);
+  const stateData = stateNameData[stateKey];
+
+  if (stateData && stateData[type]) {
+    return {
+      names: stateData[type],
+      source: `popular in ${stateInputValue.trim()}`,
+    };
   }
-}
 
-function persistReports() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-}
-
-function formatMoney(value) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value || 0);
-}
-
-function formatDateTime(isoValue) {
-  return new Date(isoValue).toLocaleString();
-}
-
-function sortedReports() {
-  return [...reports].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-function updateMap(lat, lng, station) {
-  const latNum = Number(lat);
-  const lngNum = Number(lng);
-  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return;
-
-  const delta = 0.02;
-  const bbox = [lngNum - delta, latNum - delta, lngNum + delta, latNum + delta]
-    .map((n) => n.toFixed(6))
-    .join("%2C");
-  const marker = `${latNum.toFixed(6)}%2C${lngNum.toFixed(6)}`;
-
-  mapEl.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`;
-  mapLabelEl.textContent = station ? `Showing: ${station}` : "Showing latest report location";
-}
-
-function renderStats(rows) {
-  const totalReports = rows.length;
-  const avgPrice = totalReports ? rows.reduce((sum, r) => sum + r.price, 0) / totalReports : 0;
-  const lowestPrice = totalReports ? Math.min(...rows.map((r) => r.price)) : 0;
-  const latest = rows[0];
-
-  statsEl.innerHTML = [
-    ["Reports", totalReports.toString()],
-    ["Average Price", formatMoney(avgPrice)],
-    ["Lowest Price", formatMoney(lowestPrice)],
-    ["Latest Post", latest ? formatDateTime(latest.createdAt) : "—"],
-  ]
-    .map(([label, value]) => `
-      <article class="stat">
-        <h3>${label}</h3>
-        <p>${value}</p>
-      </article>
-    `)
-    .join("");
-}
-
-function renderTable(rows) {
-  rowsEl.innerHTML = rows
-    .map(
-      (row) => `
-        <tr>
-          <td>${formatDateTime(row.createdAt)}</td>
-          <td>${row.station || "—"}</td>
-          <td>${formatMoney(row.price)}</td>
-          <td>${row.lat.toFixed(6)}</td>
-          <td>${row.lng.toFixed(6)}</td>
-          <td><a href="https://www.openstreetmap.org/?mlat=${row.lat}&mlon=${row.lng}#map=15/${row.lat}/${row.lng}" target="_blank" rel="noopener noreferrer">Open</a></td>
-          <td><button data-id="${row.id}">Delete</button></td>
-        </tr>
-      `
-    )
-    .join("");
-}
-
-function render() {
-  const rows = sortedReports();
-  renderStats(rows);
-  renderTable(rows);
-
-  if (rows[0]) {
-    updateMap(rows[0].lat, rows[0].lng, rows[0].station);
-  }
-}
-
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const next = {
-    id: crypto.randomUUID(),
-    station: document.getElementById("station").value.trim(),
-    price: Number(document.getElementById("price").value),
-    lat: Number(document.getElementById("lat").value),
-    lng: Number(document.getElementById("lng").value),
-    createdAt: new Date().toISOString(),
+  return {
+    names: type === "boy" ? nationalBoyNames : nationalGirlNames,
+    source: "nationally popular",
   };
+}
 
-  if (!Number.isFinite(next.price) || next.price <= 0) return;
-  if (!Number.isFinite(next.lat) || !Number.isFinite(next.lng)) return;
+function setSelected(type) {
+  selectedType = type;
+  boyBtn.classList.toggle("selected", type === "boy");
+  girlBtn.classList.toggle("selected", type === "girl");
+}
 
-  reports.push(next);
-  persistReports();
-  form.reset();
-  render();
-});
+boyBtn.addEventListener("click", () => setSelected("boy"));
+girlBtn.addEventListener("click", () => setSelected("girl"));
 
-rowsEl.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-id]");
-  if (!button) return;
-
-  reports = reports.filter((item) => item.id !== button.dataset.id);
-  persistReports();
-  render();
-});
-
-exportBtn.addEventListener("click", () => {
-  const rows = sortedReports();
-  const headers = ["createdAt", "station", "price", "lat", "lng"];
-  const body = rows.map((r) => headers.map((h) => JSON.stringify(r[h] ?? "")).join(",")).join("\n");
-  const csv = `${headers.join(",")}\n${body}`;
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "gas-price-reports.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-});
-
-useLocationBtn.addEventListener("click", () => {
-  if (!navigator.geolocation) {
+renderBtn.addEventListener("click", () => {
+  if (!selectedType) {
+    resultEl.textContent = "Please pick Boy or Girl first.";
     return;
   }
 
-  navigator.geolocation.getCurrentPosition((position) => {
-    document.getElementById("lat").value = position.coords.latitude.toFixed(6);
-    document.getElementById("lng").value = position.coords.longitude.toFixed(6);
-    updateMap(position.coords.latitude, position.coords.longitude, "Current location");
-  });
-});
+  if (!stateInput.value.trim()) {
+    resultEl.textContent = "Please enter your state first (like California or TX).";
+    return;
+  }
 
-render();
+  const { names, source } = getNamePool(selectedType, stateInput.value);
+  const name = getRandomName(names);
+  resultEl.textContent = `Try this ${selectedType} name: ${name} (${source})`;
+});
